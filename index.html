@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="cn" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="ionic-v1-master/css/ionic.css">
+    <script src="ionic-v1-master/js/ionic.bundle.js"></script>
+</head>
+
+<body>
+
+<ion-nav-bar class="bar-positive">
+<ion-nav-back-button class="button-icon ion-ios-arrow-back"></ion-nav-back-button>
+</ion-nav-bar>
+
+<ion-nav-view></ion-nav-view>
+
+<script id="tabs.html" type="text/ng-template">
+    <ion-tabs class="tabs-icon-top tabs-positive">
+
+        <ion-tab title="书城" icon="ion-home" href="#/tab/home">
+            <ion-nav-view name="home-tab"></ion-nav-view>
+        </ion-tab>
+        <!--href="#/tab/cart"-->
+        <ion-tab title="购物车" icon="ion-ios-cart-outline" badge="num" badge-style="badge-assertive" href="#/tab/cart">
+            <ion-nav-view name="cart-tab"></ion-nav-view>
+        </ion-tab>
+
+        <ion-tab title="我的" icon="ion-ios-person-outline" ui-sref="tabs.contact">
+            <ion-nav-view name="contact-tab"></ion-nav-view>
+        </ion-tab>
+
+    </ion-tabs>
+</script>
+
+<script id="home.html" type="text/ng-template">
+    <ion-view title="书城" hide-nav-bar="true">
+        <ion-header-bar class="item-input-inset">
+            <label class="item-input-wrapper">
+                <i class="icon ion-ios-search placeholder-icon"></i>
+                <input type="search" placeholder="搜索" ng-model="searchInput">
+            </label>
+            <button class="button button-clear button-positive" ng-click="inputSearch()">搜索</button>
+        </ion-header-bar>
+
+        <ion-content class="has-header">
+            <ion-slide-box delegate-handle="readHandle" does-continue="true" auto-play="true" slide-interval="3000" pager-click="slideChange()">
+                <ion-slide>
+                    <img class="full-image" style="display: block" src="images/toradora_dreamscene_white_edition_by_schocker1770-d5fxjah.jpg" alt="">
+                </ion-slide>
+                <ion-slide>
+                    <img class=  "full-image" style="display: block" src="images/8_2560x1600.jpg" alt="">
+                </ion-slide>
+                <ion-slide>
+                    <img class="full-image" style="display: block" src="images/nadeko_sengoku_by_noein_disgaea.jpg" alt="">
+                </ion-slide>
+            </ion-slide-box>
+            <div class="button-bar bar-calm">
+                <a class="button" ng-click="tecCategory()">技术</a>
+                <a class="button" ng-click="aniCategory()">动漫</a>
+                <a class="button" ng-click="litCategory()">文学</a>
+            </div>
+            <ion-refresher pulling-text="下拉刷新" on-refresh="doRefresh()" ></ion-refresher>
+            <ion-list>
+                <ion-item class="item-thumbnail-left" ng-repeat="book in booklists track by $index" >
+                    <img ng-src="./images/{{book.images[0].image_name}}" alt="">
+                    <h2>{{book.title}}</h2>
+                    <p>作者:{{book.author}}</p>
+                    <p>价格:&yen{{book.price}}</p>
+                    <!--<p>类别:{{book.catename}}</p>-->
+                    <!--<p>-->
+                        <a style="text-decoration: none"  ng-click="showBook(book)">查看详情</a>
+                    <!--</p>-->
+                </ion-item>
+            </ion-list>
+            <ion-infinite-scroll on-infinite="loadMore()" distance="1%"></ion-infinite-scroll>
+        </ion-content>
+    </ion-view>
+</script>
+
+<script id="bookContent.html" type="text/ng-template">
+    <ion-view title="{{search.title}}">
+        <ion-content class="has-header padding">
+            <ion-list class="card">
+                <ion-item class="item-body">
+                    <img class="full-image" ng-src="images/{{search.images[0].image_name}}">
+                    <p>
+                        This is a "Facebook" styled Card. The header is created from a Thumbnail List item,
+                        the content is from a card-body consisting of an image and paragraph text. The footer
+                        consists of tabs, icons aligned left, within the card-footer.
+                    </p>
+                    <div class="item item-avatar">
+                        <p>作者:{{search.author}}</p>
+                        <p>价格:&yen{{search.price}}</p>
+                        <p>类别:{{search.catename}}</p>
+                    </div>
+                    <p class="row">
+                        <button class="button button-assertive col" ng-click="putToCart(search)">加入购物车</button>
+                    </p>
+                </ion-item>
+            </ion-list>
+        </ion-content>
+    </ion-view>
+</script>
+
+<script id="cart.html" type="text/ng-template">
+    <ion-view title="购物车">
+        <ion-content class="has-header padding">
+            <ion-list>
+                <!--<ion-checkbox >-->
+                    <a class="item item-thumbnail-left" href="" ng-repeat="bookstore in bookstorelists track by $index">
+                        <img ng-src="./images/{{bookstore.images[0].image_name}}">
+                        <h2>{{bookstore.title}}</h2>
+                        <p>&yen{{bookstore.price}}</p>
+                        <div>
+                            <button class="button button-small button-energized" ng-click="subNum($index)">-</button>
+                            <span class="button button-small">{{cartNum}}</span>
+                            <button class="button button-small button-energized" ng-click="addNum($index)">+</button>
+                        </div>
+                    </a>
+                <!--</ion-checkbox>-->
+            </ion-list>
+            <p>
+                <a class="button icon icon-right ion-chevron-right" href="#/tab/navstack">下单</a>
+            </p>
+        </ion-content>
+    </ion-view>
+</script>
+
+<script id="nav-stack.html" type="text/ng-template">
+    <ion-view title="确认订单">
+        <ion-content class="has-header padding">
+            <p><img src="http://ionicframework.com/img/diagrams/tabs-nav-stack.png" style="width:100%"></p>
+        </ion-content>
+    </ion-view>
+</script>
+
+<script id="contact.html" type="text/ng-template">
+    <ion-view title="个人详情">
+        <ion-content class="has-header padding">
+            <p>@IonicFramework</p>
+            <p>@DriftyCo</p>
+            <p>
+                <a class="button icon icon-right ion-chevron-right" href="#/tab/reglog">下单</a>
+            </p>
+        </ion-content>
+    </ion-view>
+</script>
+
+<script id="reg-log.html" type="text/ng-template">
+    <ion-view title="确认订单">
+        <ion-content class="has-header padding">
+            <p><img src="http://ionicframework.com/img/diagrams/tabs-nav-stack.png" style="width:100%"></p>
+        </ion-content>
+    </ion-view>
+</script>
+
+<script>
+    angular
+        .module('myApp', ['ionic'])
+
+        .config(function($stateProvider,$urlRouterProvider) {
+
+            $stateProvider
+                .state('tabs', {
+                    url: "/tab",
+                    abstract: true,
+                    templateUrl: "tabs.html"
+                })
+                .state('tabs.home', {
+                    url: "/home",
+                    views: {
+                        'home-tab': {
+                            templateUrl: "home.html",
+                            controller: 'HomeTabCtrl'
+                        }
+                    }
+                })
+                .state('tabs.bookContent', {
+                    url: "/bookContent?id",
+                    views: {
+                        'home-tab': {
+                            templateUrl: "bookContent.html",
+                            controller:"bookContentCtrl"
+                        }
+                    }
+                })
+                .state('tabs.cart', {
+                    url: "/cart",
+                    views: {
+                        'cart-tab': {
+                            templateUrl: "cart.html",
+                            controller:"cartCtrl"
+                        }
+                    }
+                })
+                .state('tabs.navstack', {
+                    url: "/navstack",
+                    views: {
+                        'cart-tab': {
+                            templateUrl: "nav-stack.html"
+                        }
+                    }
+                })
+                .state('tabs.contact', {
+                    url: "/contact",
+                    views: {
+                        'contact-tab': {
+                            templateUrl: "contact.html"
+                        }
+                    }
+                })
+                .state('tabs.reglog', {
+                    url: "/reglog",
+                    views: {
+                        'contact-tab': {
+                            templateUrl: "reg-log.html"
+                        }
+                    }
+                });
+            $urlRouterProvider.otherwise("/tab/home");
+
+        })
+        .provider("httpProvider",function () {
+            this.$get = function ($http) {
+                return {
+                    requestData:function (url,success,error) {
+                        $http({
+                            url:url
+                        })
+                            .success(function (successData) {
+                                success(successData)
+                            })
+                            .error(function (errorData) {
+                                error(errorData)
+                            })
+                    }
+                }
+            }
+        })
+        .controller('HomeTabCtrl', function($scope,$rootScope,httpProvider,$ionicSlideBoxDelegate,$state) {
+            console.log('HomeTabCtrl');
+            httpProvider.requestData("book.php",function (data) {
+                $scope.booklists = data.data;
+            },function (error) {
+                console.log(error)
+            });
+//            传数据到详情页
+            $scope.showBook = function (data){
+                $state.go('tabs.bookContent',{
+                     id:data.id
+                })
+            };
+            //                搜索
+            $scope.inputSearch = function () {
+                httpProvider.requestData("bookSearch.php?search="+$scope.searchInput,function (data) {
+                    $scope.booklists = data.data;
+                })
+            };
+//                技术
+            $scope.tecCategory = function () {
+                httpProvider.requestData("book.php?cateid=1",function (data) {
+//                        console.log(data.data);
+                    $scope.booklists = data.data;
+                })
+            };
+//                动漫
+            $scope.aniCategory = function () {
+                httpProvider.requestData("book.php?cateid=2",function (data) {
+//                        console.log(data.data);
+                    $scope.booklists = data.data;
+                })
+            };
+//                文学
+            $scope.litCategory = function () {
+                httpProvider.requestData("book.php?cateid=3",function (data) {
+                    $scope.booklists = data.data;
+                })
+            };
+//            下拉刷新
+            var startIndex = 10;
+            $scope.doRefresh = function () {
+                if(startIndex < 23){
+                    httpProvider.requestData("book.php?start="+startIndex+"&length=6",function (data) {
+                        startIndex += data.data.length;
+                        angular.forEach(data.data,function(element) {
+                            $scope.booklists.unshift(element);
+                        }, this);
+                    });
+                }
+                $scope.$broadcast("scroll.refreshComplete")
+            };
+
+//            上滑刷新
+            $scope.booklists = [];
+            $scope.loadMore = function () {
+                if (startIndex < 23){
+                    httpProvider.requestData("book.php?start="+startIndex+"&length=6",function (data) {
+                        startIndex += data.data.length;
+                        angular.forEach(data.data,function(element) {
+                            $scope.booklists.push(element);
+                        }, this);
+                    });
+                }
+                $scope.$broadcast("scroll.infiniteScrollComplete");
+            };
+        })
+//        详情页面
+        .controller("bookContentCtrl",function ($scope,$rootScope,httpProvider,$stateParams) {
+            httpProvider.requestData("bookId.php?id="+$stateParams.id,function (data) {
+                $scope.search = data.data
+            });
+
+//            存入localStorage
+             $rootScope.aa = null;
+            $scope.putToCart = function(data){
+                $rootScope.aa = data;
+                $scope.$watch('aa',function(newvalue,oldvalue){
+                    var bb = newvalue;
+                    localStorage.setItem(data.id,JSON.stringify(bb));
+                })
+
+            };
+        })
+//        购物车页面
+        .controller("cartCtrl",function ($scope,$rootScope) {
+            var bookstoreArray = [];
+            console.log(localStorage);
+            angular.forEach(localStorage,function (value,index) {
+                bookstoreArray.push(JSON.parse(value));
+            });
+            $scope.bookstorelists = bookstoreArray;
+
+
+
+
+
+
+            $rootScope.num = localStorage.length;
+//            $scope.$watch("")
+            $scope.cartNum = 1;
+            $scope.subNum = function (index) {
+                console.log(index);
+                if ($scope.cartNum <= 0){
+                    $scope.cartNum = 0;
+                }else {
+                    $scope.cartNum--;
+                    $rootScope.num -= $scope.cartNum;
+                }
+
+            };
+            $scope.addNum = function (index) {
+                $scope.cartNum++;
+                $rootScope.num += $scope.cartNum;
+            }
+
+        })
+</script>
+</body>
+</html>
